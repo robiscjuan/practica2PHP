@@ -1,5 +1,6 @@
 <?php // src/routes_user.php
 
+use MiW16\Results\Entity\User;
 use Swagger\Annotations as SWG;
 
 /**
@@ -103,7 +104,7 @@ $app->get(
  *     path        = "/users/{userId}",
  *     tags        = { "Users" },
  *     summary     = "Deletes a user",
- *     description = "Deletes the user identified by `userId`.",
+ *     description = "Deletes the user identified `userId`.",
  *     operationId = "miw_delete_users",
  *     parameters={
  *          { "$ref" = "#/parameters/userId" }
@@ -214,12 +215,47 @@ $app->post(
     '/users',
     function ($request, $response, $args) {
         $this->logger->info('POST \'/users\'');
-        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
-        // process $data...
 
-        // TODO
-        $newResponse = $response->withStatus(501);
-        return $newResponse;
+        $entityManager = getEntityManager();
+        $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
+        $data = json_decode($request->getBody(), true);
+        if (!isset($data['username']) || !isset($data['email']) || !isset($data['password']) || !isset($data['enabled']))
+            return 'username , email, password and enabled are required';
+
+        $username = $data['username'];
+        $email = $data['email'];
+        $password = $data['password'];
+        $enabled = $data['enabled'];
+
+        if ($userRepository->findOneByUsername($username)) {
+            $newResponse = $response->withStatus(400);
+            $datos = array(
+                'code' => 400,
+                'message' => 'Username in use'
+            );
+            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+        }
+        if ($userRepository->findOneByEmail($email)) {
+            $newResponse = $response->withStatus(400);
+            $datos = array(
+                'code' => 400,
+                'message' => 'Email in use'
+            );
+            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+        }
+
+
+        $user = new User();
+        $user->setUsername($username);
+        $user->setEmail($email);
+        $user->setPassword($password);
+        $user->setEnabled($enabled);
+
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        $response->withStatus(201);
+        return $response->withJson($user);
     }
 )->setName('miw_post_users');
 
@@ -265,12 +301,65 @@ $app->put(
     '/users/{id:[0-9]+}',
     function ($request, $response, $args) {
         $this->logger->info('PUT \'/users\'');
-        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
-        // process $data...
 
-        // TODO
-        $newResponse = $response->withStatus(501);
-        return $newResponse;
+        $entityManager = getEntityManager();
+        $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
+        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
+
+        /** @var User $user */
+        $user = $userRepository->findOneById($args['id']);
+        if ($user === null) {
+            $newResponse = $response->withStatus(404);
+            $datos = array(
+                'code' => 404,
+                'message' => 'User not found'
+            );
+            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+        } else {
+
+            if (isset($data['username'])) {
+                $username = $data['username'];
+
+                if ($userRepository->findOneByUsername($username) !== null) {
+                    $newResponse = $response->withStatus(400);
+                    $datos = array(
+                        'code' => 400,
+                        'message' => 'Username in use'
+                    );
+                    return $this->renderer->render($newResponse, 'message.phtml', $datos);
+
+                }
+                $user->setUsername($username);
+            }
+
+            if (isset($data['email'])) {
+
+                $email = $data['email'];
+                if ($userRepository->findOneByEmail($email) !== null) {
+                    $newResponse = $response->withStatus(400);
+                    $datos = array(
+                        'code' => 400,
+                        'message' => 'Username in use'
+                    );
+                    return $this->renderer->render($newResponse, 'message.phtml', $datos);
+                }
+                $user->setEmail($email);
+            }
+
+            if (isset($data['password'])) {
+
+                $user->setPassword($data['password']);
+            }
+
+            if (isset($data['enabled'])) {
+                $enabled = $data['enabled'];
+                $user->setEnabled($enabled);
+            }
+
+            $entityManager->flush();
+
+            return $response->withJson($user);
+        }
     }
 )->setName('miw_post_users');
 

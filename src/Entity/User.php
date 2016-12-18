@@ -85,154 +85,150 @@ class User implements \JsonSerializable
     }
 
     /**
+     * @inheritDoc
+     */
+    public function __toString()
+    {
+        if ($this->isEnabled())
+            $enable = 'true';
+        else
+            $enable = 'false';
+
+        return sprintf(
+            '- %2d: %20s %30s %7s ',
+            $this->id,
+            $this->username,
+            $this->email,
+            $enable
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->id,
+            'username' => $this->username,
+            'email' => $this->email,
+            'isEnable' => $this->enabled
+        ];
+    }
+
+    /**
      * @return int
      */
-    public function getId(): int
+    public function getId()
     {
         return $this->id;
     }
 
     /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
      * @return string
      */
-    public function getUsername(): string
+    public function getUsername()
     {
         return $this->username;
     }
 
     /**
      * @param string $username
-     * @return User
      */
-    public function setUsername(string $username): User
+    public function setUsername($username)
     {
         $this->username = $username;
-        return $this;
     }
 
     /**
      * @return string
      */
-    public function getEmail(): string
+    public function getEmail()
     {
         return $this->email;
     }
 
     /**
      * @param string $email
-     * @return User
      */
-    public function setEmail(string $email): User
+    public function setEmail($email)
     {
         $this->email = $email;
-        return $this;
     }
 
     /**
      * @return boolean
      */
-    public function isEnabled(): bool
+    public function isEnabled()
     {
         return $this->enabled;
     }
 
     /**
      * @param boolean $enabled
-     * @return User
      */
-    public function setEnabled(bool $enabled): User
+    public function setEnabled($enabled)
     {
         $this->enabled = $enabled;
-        return $this;
     }
 
     /**
      * @return string
      */
-    public function getPassword(): string
+    public function getPassword()
     {
         return $this->password;
     }
 
     /**
      * @param string $password
-     * @return User
      */
-    public function setPassword(string $password): User
+    public function setPassword($password)
     {
-        $this->password = password_hash($password, PASSWORD_DEFAULT);
-        return $this;
-    }
-
-    /**
-     * Verifies that the given hash matches the user password.
-     *
-     * @param string $password
-     * @return boolean
-     */
-    public function validatePassword($password)
-    {
-        return password_verify($password, $this->password);
+        $this->password = $password;
     }
 
     /**
      * @return \DateTime
      */
-    public function getLastLogin(): \DateTime
+    public function getLastLogin()
     {
         return $this->lastLogin;
     }
 
     /**
      * @param \DateTime $lastLogin
-     * @return User
      */
-    public function setLastLogin(\DateTime $lastLogin): User
+    public function setLastLogin($lastLogin)
     {
         $this->lastLogin = $lastLogin;
-        return $this;
     }
 
     /**
      * @return string
      */
-    public function getToken(): string
+    public function getToken()
     {
         return $this->token;
     }
 
     /**
      * @param string $token
-     * @return User
      */
-    public function setToken(string $token): User
+    public function setToken($token)
     {
         $this->token = $token;
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function __toString(): string
-    {
-        return $this->username;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function jsonSerialize(): array
-    {
-        return array(
-            'id'            => $this->id,
-            'username'      => utf8_encode($this->username),
-            'email'         => utf8_encode($this->email),
-            'enabled'       => $this->enabled,
-            'token'         => $this->token
-        );
     }
 }
+
 
 /**
  * @SWG\Definition(
