@@ -160,3 +160,107 @@ class Result implements \JsonSerializable
         );
     }
 }
+
+
+/**
+ * @SWG\Definition(
+ *     definition="Result",
+ *     required = { "id", "result"},
+ *     @SWG\Property(
+ *          property    = "id",
+ *          description = "User Id",
+ *          type        = "integer",
+ *          format      = "int32"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "username",
+ *          description = "User name",
+ *          type        = "string"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "email",
+ *          description = "User email",
+ *          type        = "string"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "token",
+ *          description = "API access token",
+ *          type        = "string"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "enabled",
+ *          description = "Denotes if user is enabled",
+ *          type        = "boolean"
+ *      ),
+ *      example = {
+ *          "id"       = 1508,
+ *          "username" = "User name",
+ *          "email"    = "User email",
+ *          "enabled"  = true,
+ *          "token"    = "$2$6a7f5b9e15f9c4a51495"
+ *     }
+ * )
+ * @SWG\Parameter(
+ *      name        = "userId",
+ *      in          = "path",
+ *      description = "ID of user to fetch",
+ *      required    = true,
+ *      type        = "integer",
+ *      format      = "int32"
+ * )
+ */
+
+/**
+ * @SWG\Definition(
+ *      definition = "UserData",
+ *      @SWG\Property(
+ *          property    = "username",
+ *          description = "User name",
+ *          type        = "string"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "email",
+ *          description = "User email",
+ *          type        = "string"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "password",
+ *          description = "User password",
+ *          type        = "string",
+ *          format      = "password"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "enabled",
+ *          description = "Denotes if user is enabled",
+ *          type        = "boolean"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "token",
+ *          description = "User token",
+ *          type        = "string"
+ *      ),
+ *      example = {
+ *          "username"  = "User_name",
+ *          "email"     = "User_email@example.com",
+ *          "password"  = "User_password",
+ *          "enabled"   = true,
+ *          "token"     = "$2$6a7f5b9e15f9c4a51495"
+ *      }
+ * )
+ */
+
+/**
+ * User array definition
+ *
+ * @SWG\Definition(
+ *     definition = "UsersArray",
+ *      @SWG\Property(
+ *          property    = "users",
+ *          description = "Users array",
+ *          type        = "array",
+ *          items       = {
+ *              "$ref": "#/definitions/User"
+ *          }
+ *      )
+ * )
+ */
