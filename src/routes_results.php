@@ -189,24 +189,19 @@ $app->options(
  *          {
  *          "name":        "data",
  *          "in":          "body",
- *          "description": "`Results` properties to add to the system",
+ *          "description": "`Result` properties to add to the system",
  *          "required":    true,
  *          "schema":      { "$ref": "#/definitions/ResultData" }
  *          }
  *     },
  *     @SWG\Response(
  *          response    = 201,
- *          description = "`Created` Results created",
- *          schema      = { "$ref": "#/definitions/Results" }
+ *          description = "`Created` Result created",
+ *          schema      = { "$ref": "#/definitions/Result" }
  *     ),
  *     @SWG\Response(
- *          response    = 400,
- *          description = "`Bad Request` Resultsname or email already exists.",
- *          schema      = { "$ref": "#/definitions/Message" }
- *     ),
- *     @SWG\Response(
- *          response    = 422,
- *          description = "`Unprocessable entity` Resultsname, e-mail or password is left out",
+ *          response    = 404,
+ *          description = "Result not found",
  *          schema      = { "$ref": "#/definitions/Message" }
  *     )
  * )
@@ -224,10 +219,14 @@ $app->post(
         $result = $data['result'];
 
         if (isset($data['time']))
-            $time = $data['time'];
+            try {
+                $time = new DateTime($data['time']);
+            } catch (Exception $e) {
+                //Si la fecha es incorrecta se pone la actual
+                $time = new DateTime();
+            }
         else
             $time = new DateTime();
-
 
         $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
 
@@ -270,12 +269,12 @@ $app->post(
  *     },
  *     @SWG\Response(
  *          response    = 200,
- *          description = "`Ok` Results previously existed and is now updated",
- *          schema      = { "$ref": "#/definitions/Results" }
+ *          description = "`Ok` Result previously existed and is now updated",
+ *          schema      = { "$ref": "#/definitions/Result" }
  *     ),
  *     @SWG\Response(
  *          response    = 400,
- *          description = "`Bad Request` Results name or e-mail already exists",
+ *          description = "`Bad Request` Wrong user id",
  *          schema      = { "$ref": "#/definitions/Message" }
  *     ),
  *     @SWG\Response(
@@ -300,7 +299,7 @@ $app->put(
             $newResponse = $response->withStatus(404);
             $datos = array(
                 'code' => 404,
-                'message' => 'Results not found'
+                'message' => 'Result not found'
             );
             return $this->renderer->render($newResponse, 'message.phtml', $datos);
         } else {
@@ -320,28 +319,36 @@ $app->put(
                 $result->setResultsname($resultname);
             }
 
-            if (isset($data['email'])) {
-
-                $email = $data['email'];
-                if ($resultRepository->findOneByEmail($email) !== null) {
-                    $newResponse = $response->withStatus(400);
-                    $datos = array(
-                        'code' => 400,
-                        'message' => 'Resultsname in use'
-                    );
-                    return $this->renderer->render($newResponse, 'message.phtml', $datos);
+            if (isset($data['user_id'])) {
+                if ($data['user_id'] != 0) {
+                    $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
+                    $user = $userRepository->findOneById($data['user_id']);
+                    if ($user === null) {
+                        $newResponse = $response->withStatus(404);
+                        $datos = array(
+                            'code' => 400,
+                            'message' => 'Wrong user id'
+                        );
+                        return $this->renderer->render($newResponse, 'message.phtml', $datos);
+                    }
+                    $result->setUser($user);
                 }
-                $result->setEmail($email);
             }
 
-            if (isset($data['password'])) {
+            if (isset($data['result'])) {
 
-                $result->setPassword($data['password']);
+                if (!empty($data['result'])) {
+                    $result->setResult($data['result']);
+                }
             }
 
-            if (isset($data['enabled'])) {
-                $enabled = $data['enabled'];
-                $result->setEnabled($enabled);
+            if (isset($data['time'])) {
+                try {
+                    $time = new DateTime($data['time']);
+                    $result->setTime($time);
+                } catch (Exception $e) {
+                    //Fecha incorrecta, no se actualiza
+                }
             }
 
             $entityManager->flush();
