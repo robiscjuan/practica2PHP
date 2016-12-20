@@ -1,6 +1,10 @@
-<?php   // tests/Functional/UserApiTest.php
-
+<?php // tests/Functional/UserApiTest.php
 namespace MiW16\Results\Tests\Functional;
+
+use MiW16\Results\Entity\User;
+
+require_once '../../bootstrap.php';
+require_once 'BaseTestCase.php';
 
 /**
  * Class UserApiTest
@@ -8,31 +12,183 @@ namespace MiW16\Results\Tests\Functional;
  */
 class UserApiTest extends BaseTestCase
 {
+    private $userRepository;
+    private $entityManager;
 
-    public function testGetAllUsers()
+    protected function setUp()
+    {
+        $this->entityManager = getEntityManager();
+        $this->userRepository = $this->entityManager->getRepository('MiW16\Results\Entity\User');
+    }
+
+    public function testCGet200()
     {
         $response = $this->runApp('GET', '/users');
-
-        self::assertEquals(200, $response->getStatusCode());
-        self::assertJson((string) $response->getBody());
-        self::assertContains('users', (string)$response->getBody());
+        $body = json_decode($response->getBody());
+        $users = $this->userRepository->findAll();
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(count($body->users), count($users));
     }
 
-    public function testGetUser200()
+    public function testGet200()
     {
-        $response = $this->runApp('GET', '/users/1');
+        $userCreated = $this->createUser();
 
-        self::assertEquals(200, $response->getStatusCode());
-        self::assertJson((string) $response->getBody());
-        $usuario = json_decode((string) $response->getBody(), true);
-        self::assertEquals(1, $usuario['id']);
-        self::assertNotEmpty($usuario['username']);
+        $this->entityManager->persist($userCreated);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($userCreated);
+
+        $response = $this->runApp('GET', '/users/' . $userCreated->getId());
+
+        $user = json_decode($response->getBody());
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals($user->username, $userCreated->getUsername());
+
+        $this->entityManager->remove($userCreated);
+        $this->entityManager->flush();
     }
 
-    public function testGetUser404()
+    public function testGet404()
     {
-        $response = $this->runApp('GET', '/users/9999999999999');
+        $response = $this->runApp('GET', '/users/0');
+        $this->assertEquals(404, $response->getStatusCode());
+    }
 
-        self::assertEquals(404, $response->getStatusCode());
+    public function testPost200()
+    {
+        $response = $this->runApp('POST', '/users', $this->generateOKUser());
+        $user = json_decode($response->getBody());
+        $userCreated = $this->userRepository->findOneById($user->id);
+
+        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertEquals($user->username, $userCreated->getUsername());
+
+        $this->entityManager->remove($userCreated);
+        $this->entityManager->flush();
+    }
+
+    public function testPost422()
+    {
+        $response = $this->runApp('POST', '/users', $this->generateIncompleteUser());
+        $this->assertEquals(422, $response->getStatusCode());
+    }
+
+    public function testPost400()
+    {
+        $userCreated = $this->createUser();
+
+        $this->entityManager->persist($userCreated);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($userCreated);
+        $data = [
+            'username' => $userCreated->getUsername(),
+            'email' => $userCreated->getEmail(),
+            'enabled' => true,
+            'password' => 'abc123'
+        ];
+        $response = $this->runApp('POST', '/users', $data);
+        $body = json_decode($response->getBody());
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->entityManager->remove($userCreated);
+        $this->entityManager->flush();
+    }
+
+    public function testPut200()
+    {
+        $userCreated = $this->createUser();
+
+        $this->entityManager->persist($userCreated);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($userCreated);
+        $data = [
+            'username' => 'test' . mt_rand(0, 999999),
+        ];
+        $response = $this->runApp('PUT', '/users/' . $userCreated->getId(), $data);
+        $user = json_decode($response->getBody());
+        $this->entityManager->refresh($userCreated);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals($user->username, $userCreated->getUsername());
+    }
+
+    public function testPut404()
+    {
+        $data = [
+            'username' => 'test' . mt_rand(0, 999999),
+        ];
+
+        $response = $this->runApp('PUT', '/users/0', $data);
+        $this->assertEquals(404, $response->getStatusCode());
+    }
+
+    public function testPut400()
+    {
+        $userCreated = $this->createUser();
+
+        $this->entityManager->persist($userCreated);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($userCreated);
+
+        $data = [
+            'username' => $userCreated->getUsername(),
+            'email' => $userCreated->getEmail()
+        ];
+
+        $response = $this->runApp('PUT', '/users/' . $userCreated->getId(), $data);
+        $this->assertEquals(400, $response->getStatusCode());
+
+        $this->entityManager->remove($userCreated);
+        $this->entityManager->flush();
+    }
+
+    public function testDelete204()
+    {
+        $userCreated = $this->createUser();
+
+        $this->entityManager->persist($userCreated);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($userCreated);
+
+        $response = $this->runApp('DELETE', '/users/' . $userCreated->getId());
+        $this->assertEquals(204, $response->getStatusCode());
+    }
+
+    public function testDelete404()
+    {
+        $response = $this->runApp('DELETE', '/users/0');
+        $this->assertEquals(404, $response->getStatusCode());
+    }
+
+    public function tearDown()
+    {
+        unset($this->entityManager);
+        unset($this->userRepository);
+    }
+
+    private function createUser()
+    {
+        $userCreated = new User();
+        $userCreated->setUsername('test' . mt_rand(0, 999999));
+        $userCreated->setEmail(mt_rand(0, 999999) . '@test.com');
+        $userCreated->setEnabled(true);
+        $userCreated->setPassword("abc123");
+        return $userCreated;
+    }
+
+    private function generateOKUser()
+    {
+        return [
+            'username' => 'test' . mt_rand(0, 999999),
+            'email' => mt_rand(0, 999999) . '@test.com',
+            'enabled' => true,
+            'password' => 'abc123'
+        ];
+    }
+
+    private function generateIncompleteUser()
+    {
+        return [
+            'enabled' => true,
+            'password' => 'abc123'
+        ];
     }
 }

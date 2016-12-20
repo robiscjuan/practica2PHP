@@ -6,7 +6,6 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Class Result
- *
  * @package MiW16\Results\Entity
  *
  * @ORM\Entity
@@ -51,112 +50,200 @@ class Result implements \JsonSerializable
      *   @ORM\JoinColumn(name="user_id", referencedColumnName="id")
      * })
      */
-    protected $user;
+    private $user;
 
     /**
      * Result constructor.
      *
-     * @param int       $result result
-     * @param User      $user   user
-     * @param \DateTime $time   time
-     */
-    public function __construct(int $result, User $user, \DateTime $time)
-    {
-        $this->id     = 0;
-        $this->result = $result;
-        $this->user   = $user;
-        $this->time   = $time;
-    }
-
-    /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
-     * @return int
-     */
-    public function getResult(): int
-    {
-        return $this->result;
-    }
-
-    /**
      * @param int $result
-     * @return Result
-     */
-    public function setResult(int $result): Result
-    {
-        $this->result = $result;
-        return $this;
-    }
-
-    /**
-     * @return User
-     */
-    public function getUser(): User
-    {
-        return $this->user;
-    }
-
-    /**
      * @param User $user
-     * @return Result
-     */
-    public function setUser(User $user): Result
-    {
-        $this->user = $user;
-        return $this;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getTime(): \DateTime
-    {
-        return $this->time;
-    }
-
-    /**
      * @param \DateTime $time
-     * @return Result
      */
-    public function setTime(\DateTime $time): Result
+    public function __construct($result, $user, $time)
     {
+        $this->id = 0;
+        $this->result = $result;
+        $this->user = $user;
         $this->time = $time;
-        return $this;
     }
 
     /**
-     * Implements __toString()
-     *
      * @return string
      * @link http://php.net/manual/en/language.oop5.magic.php#language.oop5.magic.tostring
      */
-    public function __toString(): string
+    public function __toString()
     {
         return sprintf(
-            '%3d - %3d - %30s - %s',
-            $this->id,
-            $this->result,
-            $this->user,
-            $this->time->format('Y-m-d H:i:s')
+            '- %2d: %10s %20s %30s',
+            $this->getId(),
+            $this->getResult(),
+            $this->getTime()->format('Y-m-d H:i:s'),
+            $this->getUser()->getUsername() . ' - ' . 'id:' . $this->getUser()->getId() . ''
         );
     }
 
     /**
      * @inheritDoc
      */
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
-        return array(
-            'id'     => $this->id,
+        return [
+            'id' => $this->id,
             'result' => $this->result,
-            'user'   => $this->user,
-            'time'   => $this->time
-        );
+            'time' => $this->time,
+            'user' => $this->user
+        ];
     }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
+     * @return int
+     */
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    /**
+     * @param int $result
+     */
+    public function setResult($result)
+    {
+        $this->result = $result;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getTime()
+    {
+        return $this->time;
+    }
+
+    /**
+     * @param \DateTime $time
+     */
+    public function setTime($time)
+    {
+        $this->time = $time;
+    }
+
+    /**
+     * @return User
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * @param User $user
+     */
+    public function setUser($user)
+    {
+        $this->user = $user;
+    }
+
+
 }
+
+
+/**
+ * @SWG\Definition(
+ *     definition="Result",
+ *     required = { "id", "result"},
+ *     @SWG\Property(
+ *          property    = "id",
+ *          description = "Result Id",
+ *          type        = "integer",
+ *          format      = "int32"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "result",
+ *          description = "Result result",
+ *          type        = "int32"
+ *      ),
+ *     @SWG\Property(
+ *          property    = "user_id",
+ *          description = "Result user associated",
+ *          type        = "int32"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "time",
+ *          description = "Result time",
+ *          type        = "datetime"
+ *      ),
+ *      example = {
+ *          "id"       = 1508,
+ *          "result" = 100,
+ *          "user_id"  = 1,
+ *          "time"    = "2016-12-22 00:00:00"
+ *     }
+ * )
+ * @SWG\Parameter(
+ *      name        = "resultId",
+ *      in          = "path",
+ *      description = "ID of result to fetch",
+ *      required    = true,
+ *      type        = "integer",
+ *      format      = "int32"
+ * )
+ */
+
+/**
+ * @SWG\Definition(
+ *     definition = "ResultData",
+ *      @SWG\Property(
+ *          property    = "result",
+ *          description = "Result result",
+ *          type        = "integer"
+ *      ),
+ *     @SWG\Property(
+ *          property    = "user_id",
+ *          description = "Result user associated",
+ *          type        = "integer"
+ *      ),
+ *      @SWG\Property(
+ *          property    = "time",
+ *          description = "Result time",
+ *          type = "string",
+ *          format = "date-time"
+ *      ),
+ *      example = {
+ *          "result" = 100,
+ *          "user_id"  = 1,
+ *          "time"    = "2016-12-22 00:00:00"
+ *     }
+ * )
+ */
+
+/**
+ * Result array definition
+ *
+ * @SWG\Definition(
+ *     definition = "ResultsArray",
+ *      @SWG\Property(
+ *          property    = "results",
+ *          description = "Results array",
+ *          type        = "array",
+ *          items       = {
+ *              "$ref": "#/definitions/Result"
+ *          }
+ *      )
+ * )
+ */
