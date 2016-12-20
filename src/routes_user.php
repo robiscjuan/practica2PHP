@@ -224,7 +224,7 @@ $app->post(
         $entityManager = getEntityManager();
         $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
 
-        if (empty($data['username']) || empty($data['email']) || empty($data['password']) || empty($data['enabled'])) {
+        if ( empty($data['username']) || empty($data['email']) || empty($data['password']) || !isset($data['enabled'])) {
             $newResponse = $response->withStatus(422);
             $datos = array(
                 'code' => 422,
@@ -332,7 +332,7 @@ $app->put(
             return $this->renderer->render($newResponse, 'message.phtml', $datos);
         } else {
 
-            if (isset($data['username'])) {
+            if (!empty($data['username'])) {
                 $username = $data['username'];
 
                 if ($userRepository->findOneByUsername($username) !== null) {
@@ -347,22 +347,21 @@ $app->put(
                 $user->setUsername($username);
             }
 
-            if (isset($data['email'])) {
+            if (!empty($data['email'])) {
 
                 $email = $data['email'];
                 if ($userRepository->findOneByEmail($email) !== null) {
                     $newResponse = $response->withStatus(400);
                     $datos = array(
                         'code' => 400,
-                        'message' => 'Username in use'
+                        'message' => 'Email in use'
                     );
                     return $this->renderer->render($newResponse, 'message.phtml', $datos);
                 }
                 $user->setEmail($email);
             }
 
-            if (isset($data['password'])) {
-
+            if (!empty($data['password'])) {
                 $user->setPassword($data['password']);
             }
 
