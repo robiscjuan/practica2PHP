@@ -1,4 +1,4 @@
-<?php // tests/Functional/UserApiTest.php
+<?php// tests/Functional/ResultApiTest.php
 namespace MiW16\Results\Tests\Functional;
 use MiW16\Results\Entity\User;
 
@@ -8,7 +8,7 @@ require_once 'BaseTestCase.php';
  * Class UserApiTest
  * @package MiW16\Results\Tests\Functional
  */
-class UserApiTest extends BaseTestCase
+class ResultApiTest extends BaseTestCase
 {
     private $userRepository;
     private $entityManager;
@@ -23,26 +23,26 @@ class UserApiTest extends BaseTestCase
     {
         $response = $this->runApp('GET', '/users');
         $body = json_decode($response->getBody());
-        $users = $this->userRepository->findAll();
+        $dbUsers = $this->userRepository->findAll();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(count($body->users), count($users));
+        $this->assertEquals(count($body->users), count($dbUsers));
     }
 
     public function testGet200()
     {
-        $userFromDb = new User();
-        $userFromDb->setUsername("user" . rand(0, 1000000));
-        $userFromDb->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userFromDb->setPassword("1234");
-        $userFromDb->setEnabled(true);
-        $this->entityManager->persist($userFromDb);
+        $dbUser = new User();
+        $dbUser->setUsername("user" . rand(0, 1000000));
+        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $dbUser->setPassword("1234");
+        $dbUser->setEnabled(true);
+        $this->entityManager->persist($dbUser);
         $this->entityManager->flush();
-        $this->entityManager->refresh($userFromDb);
-        $response = $this->runApp('GET', '/users/' . $userFromDb->getId());
+        $this->entityManager->refresh($dbUser);
+        $response = $this->runApp('GET', '/users/' . $dbUser->getId());
         $user = json_decode($response->getBody());
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($user->username, $userFromDb->getUsername());
-        $this->entityManager->remove($userFromDb);
+        $this->assertEquals($user->username, $dbUser->getUsername());
+        $this->entityManager->remove($dbUser);
         $this->entityManager->flush();
     }
 
@@ -65,10 +65,10 @@ class UserApiTest extends BaseTestCase
 
         $response = $this->runApp('POST', '/users', $content);
         $user = json_decode($response->getBody());
-        $userFromDb = $this->userRepository->findOneById($user->id);
+        $dbUser = $this->userRepository->findOneById($user->id);
         $this->assertEquals(201, $response->getStatusCode());
-        $this->assertEquals($user->username, $userFromDb->getUsername());
-        $this->entityManager->remove($userFromDb);
+        $this->assertEquals($user->username, $dbUser->getUsername());
+        $this->entityManager->remove($dbUser);
         $this->entityManager->flush();
     }
 
@@ -85,16 +85,16 @@ class UserApiTest extends BaseTestCase
 
     public function testPost400()
     {
-        $userFromDb = new User();
-        $userFromDb->setUsername("user" . rand(0, 1000000));
-        $userFromDb->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userFromDb->setPassword("1234");
-        $userFromDb->setEnabled(true);
-        $this->entityManager->persist($userFromDb);
+        $dbUser = new User();
+        $dbUser->setUsername("user" . rand(0, 1000000));
+        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $dbUser->setPassword("1234");
+        $dbUser->setEnabled(true);
+        $this->entityManager->persist($dbUser);
         $this->entityManager->flush();
-        $this->entityManager->refresh($userFromDb);
+        $this->entityManager->refresh($dbUser);
         $content = [
-            'username' => $userFromDb->getUsername(),
+            'username' => $dbUser->getUsername(),
             'email' => 'user' . rand(0, 1000000) . '@mail.com',
             'enabled' => true,
             'password' => '1234'
@@ -103,29 +103,29 @@ class UserApiTest extends BaseTestCase
         $body = json_decode($response->getBody());
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertEquals("Bad Request", $body->message);
-        $this->entityManager->remove($userFromDb);
+        $this->entityManager->remove($dbUser);
         $this->entityManager->flush();
     }
 
     public function testPut200()
     {
-        $userFromDb = new User();
-        $userFromDb->setUsername("user" . rand(0, 1000000));
-        $userFromDb->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userFromDb->setPassword("1234");
-        $userFromDb->setEnabled(true);
-        $this->entityManager->persist($userFromDb);
+        $dbUser = new User();
+        $dbUser->setUsername("user" . rand(0, 1000000));
+        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $dbUser->setPassword("1234");
+        $dbUser->setEnabled(true);
+        $this->entityManager->persist($dbUser);
         $this->entityManager->flush();
-        $this->entityManager->refresh($userFromDb);
+        $this->entityManager->refresh($dbUser);
         $content = [
             'username' => 'user' . rand(0, 1000000),
             'email' => 'user' . rand(0, 1000000) . '@mail.com'
         ];
-        $response = $this->runApp('PUT', '/users/' . $userFromDb->getId(), $content);
+        $response = $this->runApp('PUT', '/users/' . $dbUser->getId(), $content);
         $user = json_decode($response->getBody());
-        $this->entityManager->refresh($userFromDb);
+        $this->entityManager->refresh($dbUser);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($user->username, $userFromDb->getUsername());
+        $this->assertEquals($user->username, $dbUser->getUsername());
     }
 
     public function testPut404()
@@ -142,33 +142,33 @@ class UserApiTest extends BaseTestCase
 
     public function testPut400()
     {
-        $userFromDb = new User();
-        $userFromDb->setUsername("user" . rand(0, 1000000));
-        $userFromDb->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userFromDb->setPassword("1234");
-        $userFromDb->setEnabled(true);
-        $this->entityManager->persist($userFromDb);
+        $dbUser = new User();
+        $dbUser->setUsername("user" . rand(0, 1000000));
+        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $dbUser->setPassword("1234");
+        $dbUser->setEnabled(true);
+        $this->entityManager->persist($dbUser);
         $this->entityManager->flush();
-        $this->entityManager->refresh($userFromDb);
-        $content = ['username' => $userFromDb->getUsername()];
-        $response = $this->runApp('PUT', '/users/' . $userFromDb->getId(), $content);
+        $this->entityManager->refresh($dbUser);
+        $content = ['username' => $dbUser->getUsername()];
+        $response = $this->runApp('PUT', '/users/' . $dbUser->getId(), $content);
         $this->assertEquals(400, $response->getStatusCode());
-        $this->entityManager->remove($userFromDb);
+        $this->entityManager->remove($dbUser);
         $this->entityManager->flush();
     }
 
     public function testDelete204()
     {
-        $userFromDb = new User();
-        $userFromDb->setUsername("user" . rand(0, 1000000));
-        $userFromDb->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userFromDb->setPassword("1234");
-        $userFromDb->setEnabled(true);
-        $this->entityManager->persist($userFromDb);
+        $dbUser = new User();
+        $dbUser->setUsername("user" . rand(0, 1000000));
+        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $dbUser->setPassword("1234");
+        $dbUser->setEnabled(true);
+        $this->entityManager->persist($dbUser);
         $this->entityManager->flush();
-        $this->entityManager->refresh($userFromDb);
+        $this->entityManager->refresh($dbUser);
 
-        $response = $this->runApp('DELETE', '/users/' . $userFromDb->getId());
+        $response = $this->runApp('DELETE', '/users/' . $dbUser->getId());
         $this->assertEquals(204, $response->getStatusCode());
     }
 
@@ -185,18 +185,4 @@ class UserApiTest extends BaseTestCase
         unset($this->testsub);
     }
 
-    private function generateOKUser(){
-        return [
-            'username' => 'test' . mt_rand(0, 999999),
-            'email' => mt_rand(0, 999999) . '@test.com',
-            'enabled' => true,
-            'password' => 'abc123'
-        ];
-    }
-    private function generateIncompleteUser(){
-        return [
-            'enabled' => true,
-            'password' => 'abc123'
-        ];
-    }
 }
