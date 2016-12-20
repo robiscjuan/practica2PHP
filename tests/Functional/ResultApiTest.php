@@ -10,122 +10,122 @@ require_once 'BaseTestCase.php';
  */
 class ResultApiTest extends BaseTestCase
 {
-    private $userRepository;
+
+    private $resultRepository;
     private $entityManager;
 
     protected function setUp()
     {
         $this->entityManager = getEntityManager();
         $this->userRepository = $this->entityManager->getRepository('MiW16\Results\Entity\User');
+        $this->resultRepository = $this->entityManager->getRepository('MiW16\Results\Entity\Result');
+
+        $this->user = $this->createUser();
+
+        $this->entityManager->persist($this->user);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($this->user);
     }
 
     public function testCGet200()
     {
-        $response = $this->runApp('GET', '/users');
+        $response = $this->runApp('GET', '/results');
         $body = json_decode($response->getBody());
-        $dbUsers = $this->userRepository->findAll();
+        $users = $this->resultRepository->findAll();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(count($body->users), count($dbUsers));
+        $this->assertEquals(count($body->users), count($users));
     }
 
     public function testGet200()
     {
-        $dbUser = new User();
-        $dbUser->setUsername("user" . rand(0, 1000000));
-        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $dbUser->setPassword("1234");
-        $dbUser->setEnabled(true);
-        $this->entityManager->persist($dbUser);
+        $userCreated = new User();
+        $userCreated->setUsername("user" . rand(0, 1000000));
+        $userCreated->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $userCreated->setPassword("1234");
+        $userCreated->setEnabled(true);
+
+        $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
-        $this->entityManager->refresh($dbUser);
-        $response = $this->runApp('GET', '/users/' . $dbUser->getId());
+        $this->entityManager->refresh($userCreated);
+
+        $response = $this->runApp('GET', '/results/' . $userCreated->getId());
+
         $user = json_decode($response->getBody());
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($user->username, $dbUser->getUsername());
-        $this->entityManager->remove($dbUser);
+        $this->assertEquals($user->username, $userCreated->getUsername());
+
+        $this->entityManager->remove($userCreated);
         $this->entityManager->flush();
     }
 
     public function testGet404()
     {
-        $response = $this->runApp('GET', '/users/9999999999999');
-        $body = json_decode($response->getBody());
+        $response = $this->runApp('GET', '/results/0');
         $this->assertEquals(404, $response->getStatusCode());
-        $this->assertEquals("User not found", $body->message);
     }
 
     public function testPost200()
     {
-        $content = [
-            'username' => 'test' . mt_rand(0, 1000000),
-            'email' => mt_rand(0, 1000000) . '@test.com',
-            'enabled' => true,
-            'password' => 'abc123'
-        ];
-
-        $response = $this->runApp('POST', '/users', $content);
+        $response = $this->runApp('POST', '/results', $this->generateOKResult());
         $user = json_decode($response->getBody());
-        $dbUser = $this->userRepository->findOneById($user->id);
+        $userCreated = $this->resultRepository->findOneById($user->id);
+
         $this->assertEquals(201, $response->getStatusCode());
-        $this->assertEquals($user->username, $dbUser->getUsername());
-        $this->entityManager->remove($dbUser);
+        $this->assertEquals($user->username, $userCreated->getUsername());
+
+        $this->entityManager->remove($userCreated);
         $this->entityManager->flush();
     }
 
     public function testPost422()
     {
-        $content = [
-            'username' => 'user' . rand(0, 1000000),
-            'enabled' => true,
-            'password' => '1234'
-        ];
-        $response = $this->runApp('POST', '/users', $content);
+        $response = $this->runApp('POST', '/results', $this->generateIncompleteUser());
         $this->assertEquals(422, $response->getStatusCode());
     }
 
     public function testPost400()
     {
-        $dbUser = new User();
-        $dbUser->setUsername("user" . rand(0, 1000000));
-        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $dbUser->setPassword("1234");
-        $dbUser->setEnabled(true);
-        $this->entityManager->persist($dbUser);
+        $userCreated = new User();
+        $userCreated->setUsername("user" . rand(0, 1000000));
+        $userCreated->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $userCreated->setPassword("1234");
+        $userCreated->setEnabled(true);
+
+        $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
-        $this->entityManager->refresh($dbUser);
-        $content = [
-            'username' => $dbUser->getUsername(),
-            'email' => 'user' . rand(0, 1000000) . '@mail.com',
+        $this->entityManager->refresh($userCreated);
+        $data = [
+            'username' => $userCreated->getUsername(),
+            'email' => $userCreated->getEmail(),
             'enabled' => true,
-            'password' => '1234'
+            'password' => 'abc123'
         ];
-        $response = $this->runApp('POST', '/users', $content);
+        $response = $this->runApp('POST', '/results', $data);
         $body = json_decode($response->getBody());
         $this->assertEquals(400, $response->getStatusCode());
-        $this->assertEquals("Bad Request", $body->message);
-        $this->entityManager->remove($dbUser);
+        $this->entityManager->remove($userCreated);
         $this->entityManager->flush();
     }
 
     public function testPut200()
     {
-        $dbUser = new User();
-        $dbUser->setUsername("user" . rand(0, 1000000));
-        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $dbUser->setPassword("1234");
-        $dbUser->setEnabled(true);
-        $this->entityManager->persist($dbUser);
+        $userCreated = new User();
+        $userCreated->setUsername("user" . rand(0, 1000000));
+        $userCreated->setEmail("user" . rand(0, 1000000) . "@mail.com");
+        $userCreated->setPassword("1234");
+        $userCreated->setEnabled(true);
+        $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
-        $this->entityManager->refresh($dbUser);
+        $this->entityManager->refresh($userCreated);
         $content = [
             'username' => 'user' . rand(0, 1000000),
             'email' => 'user' . rand(0, 1000000) . '@mail.com'
         ];
-        $response = $this->runApp('PUT', '/users/' . $dbUser->getId(), $content);
+        $response = $this->runApp('PUT', '/results/' . $userCreated->getId(), $content);
         $user = json_decode($response->getBody());
-        $this->entityManager->refresh($dbUser);
+        $this->entityManager->refresh($userCreated);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($user->username, $dbUser->getUsername());
+        $this->assertEquals($user->username, $userCreated->getUsername());
     }
 
     public function testPut404()
@@ -134,55 +134,74 @@ class ResultApiTest extends BaseTestCase
             'username' => 'user' . rand(0, 1000000),
             'email' => 'user' . rand(0, 1000000) . '@mail.com'
         ];
-        $response = $this->runApp('PUT', '/users/99999999999999999999', $content);
-        $body = json_decode($response->getBody());
+
+        $response = $this->runApp('PUT', '/results/0', $content);
         $this->assertEquals(404, $response->getStatusCode());
-        $this->assertEquals("Not Found", $body->message);
     }
 
     public function testPut400()
     {
-        $dbUser = new User();
-        $dbUser->setUsername("user" . rand(0, 1000000));
-        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $dbUser->setPassword("1234");
-        $dbUser->setEnabled(true);
-        $this->entityManager->persist($dbUser);
+        $userCreated = $this->createUser();
+
+        $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
-        $this->entityManager->refresh($dbUser);
-        $content = ['username' => $dbUser->getUsername()];
-        $response = $this->runApp('PUT', '/users/' . $dbUser->getId(), $content);
+        $this->entityManager->refresh($userCreated);
+
+        $data = [
+            'username' => $userCreated->getUsername(),
+            'email' => $userCreated->getEmail()
+        ];
+
+        $response = $this->runApp('PUT', '/results/' . $userCreated->getId(), $data);
         $this->assertEquals(400, $response->getStatusCode());
-        $this->entityManager->remove($dbUser);
+
+        $this->entityManager->remove($userCreated);
         $this->entityManager->flush();
     }
 
     public function testDelete204()
     {
-        $dbUser = new User();
-        $dbUser->setUsername("user" . rand(0, 1000000));
-        $dbUser->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $dbUser->setPassword("1234");
-        $dbUser->setEnabled(true);
-        $this->entityManager->persist($dbUser);
-        $this->entityManager->flush();
-        $this->entityManager->refresh($dbUser);
+        $userCreated = $this->createUser();
 
-        $response = $this->runApp('DELETE', '/users/' . $dbUser->getId());
+        $this->entityManager->persist($userCreated);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($userCreated);
+
+        $response = $this->runApp('DELETE', '/results/' . $userCreated->getId());
         $this->assertEquals(204, $response->getStatusCode());
     }
 
     public function testDelete404()
     {
-        $response = $this->runApp('DELETE', '/users/99999999999999999999');
-        $body = json_decode($response->getBody());
+        $response = $this->runApp('DELETE', '/results/0');
         $this->assertEquals(404, $response->getStatusCode());
-        $this->assertEquals("User not found", $body->message);
     }
 
     public function tearDown()
     {
-        unset($this->testsub);
+        unset($this->entityManager);
+        unset($this->resultRepository);
     }
 
+    private function createUser(){
+        $userCreated = new User();
+        $userCreated->setUsername('test' . mt_rand(0, 999999));
+        $userCreated->setEmail(mt_rand(0, 999999) . '@test.com');
+        $userCreated->setEnabled(true);
+        $userCreated->setPassword("abc123");
+        return $userCreated;
+    }
+    private function generateOKResult(){
+        return [
+            'result' => mt_rand(0, 999999),
+            'user' => $this->user->getId(),
+            'time' => new \DateTime()
+        ];
+    }
+    private function generateIncompleteUser(){
+        return [
+            'enabled' => true,
+            'password' => 'abc123'
+        ];
+    }
 }
