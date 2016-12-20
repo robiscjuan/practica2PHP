@@ -69,8 +69,14 @@
                             "$ref": "#/definitions/Result"
                         }
                     },
-                    "404": {
-                        "description": "Result not found",
+                    "400": {
+                        "description": "`Bad Request` Wrong user id.",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    },
+                    "422": {
+                        "description": "`Unprocessable entity` Result is left out",
                         "schema": {
                             "$ref": "#/definitions/Message"
                         }

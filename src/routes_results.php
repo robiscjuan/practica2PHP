@@ -200,8 +200,13 @@ $app->options(
  *          schema      = { "$ref": "#/definitions/Result" }
  *     ),
  *     @SWG\Response(
- *          response    = 404,
- *          description = "Result not found",
+ *          response    = 400,
+ *          description = "`Bad Request` Wrong user id.",
+ *          schema      = { "$ref": "#/definitions/Message" }
+ *     ),
+ *     @SWG\Response(
+ *          response    = 422,
+ *          description = "`Unprocessable entity` Result is left out",
  *          schema      = { "$ref": "#/definitions/Message" }
  *     )
  * )
@@ -210,11 +215,20 @@ $app->post(
     '/results',
     function ($request, $response, $args) {
         $this->logger->info('POST \'/results\'');
+        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
+        if ($data === null) {
+            $data = $request->getParsedBody();
+        }
 
         $entityManager = getEntityManager();
-        $data = json_decode($request->getBody(), true);
-        if (!isset($data['result']))
-            return 'Result is required';
+        if (empty($data['result'])) {
+            $newResponse = $response->withStatus(422);
+            $datos = array(
+                'code' => 422,
+                'message' => 'Result is required'
+            );
+            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+        }
 
         $result = $data['result'];
 
@@ -232,8 +246,13 @@ $app->post(
 
         $user = $userRepository->findOneById($data['user_id']);
         if ($user === null) {
-            http_response_code(404);
-            return 'User not found';
+            $newResponse = $response->withStatus(400);
+            $datos = array(
+                'code' => 400,
+                'message' => 'Wrong user id'
+            );
+            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+
         }
 
         $result = new Result($result, $user, $time);
@@ -241,8 +260,7 @@ $app->post(
         $entityManager->persist($result);
         $entityManager->flush();
 
-        $response->withStatus(201);
-        return $response->withJson($result);
+        return $response->withStatus(201)->withJson($result);
     }
 )->setName('miw_post_results');
 
@@ -288,10 +306,13 @@ $app->put(
     '/results/{id:[0-9]+}',
     function ($request, $response, $args) {
         $this->logger->info('PUT \'/results\'');
+        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
+        if ($data === null) {
+            $data = $request->getParsedBody();
+        }
 
         $entityManager = getEntityManager();
         $resultRepository = $entityManager->getRepository('MiW16\Results\Entity\Result');
-        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
 
         /** @var Results $result */
         $result = $resultRepository->findOneById($args['id']);
@@ -324,7 +345,7 @@ $app->put(
                     $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
                     $user = $userRepository->findOneById($data['user_id']);
                     if ($user === null) {
-                        $newResponse = $response->withStatus(404);
+                        $newResponse = $response->withStatus(400);
                         $datos = array(
                             'code' => 400,
                             'message' => 'Wrong user id'
