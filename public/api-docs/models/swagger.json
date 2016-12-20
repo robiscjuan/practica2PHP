@@ -21,6 +21,177 @@
         "application/json"
     ],
     "paths": {
+        "/results": {
+            "get": {
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Returns all results",
+                "description": "Returns all results from the system that the result has access to.",
+                "operationId": "miw_cget_results",
+                "responses": {
+                    "200": {
+                        "description": "Results array response",
+                        "schema": {
+                            "$ref": "#/definitions/ResultsArray"
+                        }
+                    },
+                    "404": {
+                        "description": "Results object not found",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Creates a new result",
+                "description": "Creates a new result",
+                "operationId": "miw_post_results",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "description": "`Result` properties to add to the system",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ResultData"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "`Created` Result created",
+                        "schema": {
+                            "$ref": "#/definitions/Result"
+                        }
+                    },
+                    "400": {
+                        "description": "`Bad Request` Wrong user id.",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    },
+                    "422": {
+                        "description": "`Unprocessable entity` Result is left out",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    }
+                }
+            },
+            "options": {
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Provides the list of HTTP supported methods",
+                "description": "Return a `Allow` header with a list of HTTP supported methods.",
+                "operationId": "miw_options_results",
+                "responses": {
+                    "200": {
+                        "description": "`Allow` header &lt;Response body is empty&gt;"
+                    }
+                }
+            }
+        },
+        "/results/{resultId}": {
+            "get": {
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Returns a result based on a single ID",
+                "description": "Returns the result identified by `resultId`.",
+                "operationId": "miw_get_results",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/resultId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Results",
+                        "schema": {
+                            "$ref": "#/definitions/Results"
+                        }
+                    },
+                    "404": {
+                        "description": "Results id. not found",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Updates a result",
+                "description": "Updates the result identified by `resultId`.",
+                "operationId": "miw_put_results",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/resultId"
+                    },
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "description": "`Results` data to update",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ResultData"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`Ok` Result previously existed and is now updated",
+                        "schema": {
+                            "$ref": "#/definitions/Result"
+                        }
+                    },
+                    "400": {
+                        "description": "`Bad Request` Wrong user id",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    },
+                    "404": {
+                        "description": "`Not Found` The result could not be found",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Deletes a result",
+                "description": "Deletes the result identified `resultId`.",
+                "operationId": "miw_delete_results",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/resultId"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Results deleted &lt;Response body is empty&gt;"
+                    },
+                    "404": {
+                        "description": "Results not found",
+                        "schema": {
+                            "$ref": "#/definitions/Message"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "tags": [
@@ -172,7 +343,7 @@
                     "Users"
                 ],
                 "summary": "Deletes a user",
-                "description": "Deletes the user identified by `userId`.",
+                "description": "Deletes the user identified `userId`.",
                 "operationId": "miw_delete_users",
                 "parameters": [
                     {
@@ -194,6 +365,70 @@
         }
     },
     "definitions": {
+        "Result": {
+            "required": [
+                "id",
+                "result"
+            ],
+            "properties": {
+                "id": {
+                    "description": "Result Id",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "result": {
+                    "description": "Result result",
+                    "type": "int32"
+                },
+                "user_id": {
+                    "description": "Result user associated",
+                    "type": "int32"
+                },
+                "time": {
+                    "description": "Result time",
+                    "type": "datetime"
+                }
+            },
+            "example": {
+                "id": 1508,
+                "result": 100,
+                "user_id": 1,
+                "time": "2016-12-22 00:00:00"
+            }
+        },
+        "ResultData": {
+            "properties": {
+                "result": {
+                    "description": "Result result",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "Result user associated",
+                    "type": "integer"
+                },
+                "time": {
+                    "description": "Result time",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            },
+            "example": {
+                "result": 100,
+                "user_id": 1,
+                "time": "2016-12-22 00:00:00"
+            }
+        },
+        "ResultsArray": {
+            "properties": {
+                "results": {
+                    "description": "Results array",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Result"
+                    }
+                }
+            }
+        },
         "User": {
             "required": [
                 "id",
@@ -297,6 +532,14 @@
         }
     },
     "parameters": {
+        "resultId": {
+            "name": "resultId",
+            "in": "path",
+            "description": "ID of result to fetch",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+        },
         "userId": {
             "name": "userId",
             "in": "path",
