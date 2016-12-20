@@ -1,18 +1,18 @@
 <?php // apiResultsDoctrine - src/routes_results.php
 
-use MiW16\Results\Entity\Results;
+use MiW16\Results\Entity\Result;
 use Swagger\Annotations as SWG;
 
 /**
  * Summary: Returns all results
- * Notes: Returns all results from the system that the user has access to.
+ * Notes: Returns all results from the system that the result has access to.
  *
  * @SWG\Get(
  *     method      = "GET",
  *     path        = "/results",
  *     tags        = { "Results" },
  *     summary     = "Returns all results",
- *     description = "Returns all results from the system that the user has access to.",
+ *     description = "Returns all results from the system that the result has access to.",
  *     operationId = "miw_cget_results",
  *     @SWG\Response(
  *          response    = 200,
@@ -31,11 +31,11 @@ $app->get(
     '/results',
     function ($request, $response, $args) {
         $this->logger->info('GET \'/results\'');
-        $usuarios = getEntityManager()
-            ->getRepository('MiW16\Results\Entity\Results')
+        $results = getEntityManager()
+            ->getRepository('MiW16\Results\Entity\Result')
             ->findAll();
 
-        if (empty($usuarios)) { // 404 - Results object not found
+        if (empty($results)) { // 404 - Results object not found
             $newResponse = $response->withStatus(404);
             $datos = array(
                 'code' => 404,
@@ -44,23 +44,23 @@ $app->get(
             return $this->renderer->render($newResponse, 'message.phtml', $datos);
         }
 
-        return $response->withJson(array('results' => $usuarios));
+        return $response->withJson(array('results' => $results));
     }
 )->setName('miw_cget_results');
 
 /**
- * Summary: Returns a user based on a single ID
- * Notes: Returns the user identified by &#x60;userId&#x60;.
+ * Summary: Returns a result based on a single ID
+ * Notes: Returns the result identified by &#x60;resultId&#x60;.
  *
  * @SWG\Get(
  *     method      = "GET",
- *     path        = "/results/{userId}",
+ *     path        = "/results/{resultId}",
  *     tags        = { "Results" },
- *     summary     = "Returns a user based on a single ID",
- *     description = "Returns the user identified by `userId`.",
+ *     summary     = "Returns a result based on a single ID",
+ *     description = "Returns the result identified by `resultId`.",
  *     operationId = "miw_get_results",
  *     parameters  = {
- *          { "$ref" = "#/parameters/userId" }
+ *          { "$ref" = "#/parameters/resultId" }
  *     },
  *     @SWG\Response(
  *          response    = 200,
@@ -78,11 +78,11 @@ $app->get(
     '/results/{id:[0-9]+}',
     function ($request, $response, $args) {
         $this->logger->info('GET \'/results/' . $args['id'] . '\'');
-        $usuario = getEntityManager()
-            ->getRepository('MiW16\Results\Entity\Results')
+        $results = getEntityManager()
+            ->getRepository('MiW16\Results\Entity\Result')
             ->findOneById($args['id']);
 
-        if (empty($usuario)) {  // 404 - Results id. not found
+        if (empty($results)) {  // 404 - Results id. not found
             $newResponse = $response->withStatus(404);
             $datos = array(
                 'code' => 404,
@@ -91,23 +91,23 @@ $app->get(
             return $this->renderer->render($newResponse, 'message.phtml', $datos);
         }
 
-        return $response->withJson($usuario);
+        return $response->withJson($results);
     }
 )->setName('miw_get_results');
 
 /**
- * Summary: Deletes a user
- * Notes: Deletes the user identified by &#x60;userId&#x60;.
+ * Summary: Deletes a result
+ * Notes: Deletes the result identified by &#x60;resultId&#x60;.
  *
  * @SWG\Delete(
  *     method      = "DELETE",
- *     path        = "/results/{userId}",
+ *     path        = "/results/{resultId}",
  *     tags        = { "Results" },
- *     summary     = "Deletes a user",
- *     description = "Deletes the user identified `userId`.",
+ *     summary     = "Deletes a result",
+ *     description = "Deletes the result identified `resultId`.",
  *     operationId = "miw_delete_results",
  *     parameters={
- *          { "$ref" = "#/parameters/userId" }
+ *          { "$ref" = "#/parameters/resultId" }
  *     },
  *     @SWG\Response(
  *          response    = 204,
@@ -125,10 +125,10 @@ $app->delete(
     function ($request, $response, $args) {
         $this->logger->info('DELETE \'/results/' . $args['id'] . '\'');
         $em = getEntityManager();
-        $usuario = $em
-            ->getRepository('MiW16\Results\Entity\Results')
+        $result = $em
+            ->getRepository('MiW16\Results\Entity\Result')
             ->findOneById($args['id']);
-        if (empty($usuario)) {  // 404 - Results id. not found
+        if (empty($result)) {  // 404 - Results id. not found
             $newResponse = $response->withStatus(404);
             $datos = array(
                 'code' => 404,
@@ -136,7 +136,7 @@ $app->delete(
             );
             return $this->renderer->render($newResponse, 'message.phtml', $datos);
         } else {
-            $em->remove($usuario);
+            $em->remove($result);
             $em->flush();
         }
 
@@ -175,15 +175,15 @@ $app->options(
 )->setName('miw_options_results');
 
 /**
- * Summary: Creates a new user
- * Notes: Creates a new user
+ * Summary: Creates a new result
+ * Notes: Creates a new result
  *
  * @SWG\Post(
  *     method      = "POST",
  *     path        = "/results",
  *     tags        = { "Results" },
- *     summary     = "Creates a new user",
- *     description = "Creates a new user",
+ *     summary     = "Creates a new result",
+ *     description = "Creates a new result",
  *     operationId = "miw_post_results",
  *     parameters  = {
  *          {
@@ -191,7 +191,7 @@ $app->options(
  *          "in":          "body",
  *          "description": "`Results` properties to add to the system",
  *          "required":    true,
- *          "schema":      { "$ref": "#/definitions/ResultsData" }
+ *          "schema":      { "$ref": "#/definitions/ResultData" }
  *          }
  *     },
  *     @SWG\Response(
@@ -217,67 +217,55 @@ $app->post(
         $this->logger->info('POST \'/results\'');
 
         $entityManager = getEntityManager();
-        $userRepository = $entityManager->getRepository('MiW16\Results\Entity\Results');
         $data = json_decode($request->getBody(), true);
-        if (!isset($data['username']) || !isset($data['email']) || !isset($data['password']) || !isset($data['enabled']))
-            return 'username , email, password and enabled are required';
+        if (!isset($data['result']))
+            return 'Result is required';
 
-        $username = $data['username'];
-        $email = $data['email'];
-        $password = $data['password'];
-        $enabled = $data['enabled'];
+        $result = $data['result'];
 
-        if ($userRepository->findOneByResultsname($username)) {
-            $newResponse = $response->withStatus(400);
-            $datos = array(
-                'code' => 400,
-                'message' => 'Resultsname in use'
-            );
-            return $this->renderer->render($newResponse, 'message.phtml', $datos);
-        }
-        if ($userRepository->findOneByEmail($email)) {
-            $newResponse = $response->withStatus(400);
-            $datos = array(
-                'code' => 400,
-                'message' => 'Email in use'
-            );
-            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+        if (isset($data['time']))
+            $time = $data['time'];
+        else
+            $time = new DateTime();
+
+
+        $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
+
+        $user = $userRepository->findOneById($data['user_id']);
+        if ($user === null) {
+            http_response_code(404);
+            return 'User not found';
         }
 
+        $result = new Result($result, $user, $time);
 
-        $user = new Results();
-        $user->setResultsname($username);
-        $user->setEmail($email);
-        $user->setPassword($password);
-        $user->setEnabled($enabled);
-
-        $entityManager->persist($user);
+        $entityManager->persist($result);
         $entityManager->flush();
 
         $response->withStatus(201);
-        return $response->withJson($user);
+        return $response->withJson($result);
     }
 )->setName('miw_post_results');
 
 /**
- * Summary: Updates a user
- * Notes: Updates the user identified by &#x60;userId&#x60;.
+ * Summary: Updates a result
+ * Notes: Updates the result identified by &#x60;resultId&#x60;.
  *
  * @SWG\Put(
  *     method      = "PUT",
- *     path        = "/results/{userId}",
+ *     path        = "/results/{resultId}",
  *     tags        = { "Results" },
- *     summary     = "Updates a user",
- *     description = "Updates the user identified by `userId`.",
+ *     summary     = "Updates a result",
+ *     description = "Updates the result identified by `resultId`.",
  *     operationId = "miw_put_results",
  *     parameters={
- *          { "$ref" = "#/parameters/userId" },
+ *          { "$ref" = "#/parameters/resultId" },
  *          {
  *          "name":        "data",
  *          "in":          "body",
  *          "description": "`Results` data to update",
  *          "required":    true,
- *          "schema":      { "$ref": "#/definitions/ResultsData" }
+ *          "schema":      { "$ref": "#/definitions/ResultData" }
  *          }
  *     },
  *     @SWG\Response(
@@ -292,7 +280,7 @@ $app->post(
  *     ),
  *     @SWG\Response(
  *          response    = 404,
- *          description = "`Not Found` The user could not be found",
+ *          description = "`Not Found` The result could not be found",
  *          schema      = { "$ref": "#/definitions/Message" }
  *     )
  * )
@@ -303,12 +291,12 @@ $app->put(
         $this->logger->info('PUT \'/results\'');
 
         $entityManager = getEntityManager();
-        $userRepository = $entityManager->getRepository('MiW16\Results\Entity\Results');
+        $resultRepository = $entityManager->getRepository('MiW16\Results\Entity\Result');
         $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
 
-        /** @var Results $user */
-        $user = $userRepository->findOneById($args['id']);
-        if ($user === null) {
+        /** @var Results $result */
+        $result = $resultRepository->findOneById($args['id']);
+        if ($result === null) {
             $newResponse = $response->withStatus(404);
             $datos = array(
                 'code' => 404,
@@ -317,10 +305,10 @@ $app->put(
             return $this->renderer->render($newResponse, 'message.phtml', $datos);
         } else {
 
-            if (isset($data['username'])) {
-                $username = $data['username'];
+            if (isset($data['resultname'])) {
+                $resultname = $data['resultname'];
 
-                if ($userRepository->findOneByResultsname($username) !== null) {
+                if ($resultRepository->findOneByResultsname($resultname) !== null) {
                     $newResponse = $response->withStatus(400);
                     $datos = array(
                         'code' => 400,
@@ -329,13 +317,13 @@ $app->put(
                     return $this->renderer->render($newResponse, 'message.phtml', $datos);
 
                 }
-                $user->setResultsname($username);
+                $result->setResultsname($resultname);
             }
 
             if (isset($data['email'])) {
 
                 $email = $data['email'];
-                if ($userRepository->findOneByEmail($email) !== null) {
+                if ($resultRepository->findOneByEmail($email) !== null) {
                     $newResponse = $response->withStatus(400);
                     $datos = array(
                         'code' => 400,
@@ -343,22 +331,22 @@ $app->put(
                     );
                     return $this->renderer->render($newResponse, 'message.phtml', $datos);
                 }
-                $user->setEmail($email);
+                $result->setEmail($email);
             }
 
             if (isset($data['password'])) {
 
-                $user->setPassword($data['password']);
+                $result->setPassword($data['password']);
             }
 
             if (isset($data['enabled'])) {
                 $enabled = $data['enabled'];
-                $user->setEnabled($enabled);
+                $result->setEnabled($enabled);
             }
 
             $entityManager->flush();
 
-            return $response->withJson($user);
+            return $response->withJson($result);
         }
     }
 )->setName('miw_post_results');
