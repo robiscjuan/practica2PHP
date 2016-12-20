@@ -3,9 +3,9 @@
 namespace MiW16\Results\Tests\Functional;
 
 use Slim\App;
+use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\Response;
-use Slim\Http\Environment;
 
 /**
  * This is an example class that shows how you could set up a method that

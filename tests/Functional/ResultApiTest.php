@@ -1,9 +1,12 @@
-<?php// tests/Functional/ResultApiTest.php
+<?php // tests/Functional/ResultApiTest.php
 namespace MiW16\Results\Tests\Functional;
+
+use MiW16\Results\Entity\Result;
 use MiW16\Results\Entity\User;
 
 require_once '../../bootstrap.php';
 require_once 'BaseTestCase.php';
+
 /**
  * Class UserApiTest
  * @package MiW16\Results\Tests\Functional

@@ -220,11 +220,11 @@ $app->post(
         if ($data === null) {
             $data = $request->getParsedBody();
         }
-        
+
         $entityManager = getEntityManager();
         $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
 
-        if (empty($data['username']) || empty($data['email']) || empty($data['password']) || empty($data['enabled'])){
+        if (empty($data['username']) || empty($data['email']) || empty($data['password']) || empty($data['enabled'])) {
             $newResponse = $response->withStatus(422);
             $datos = array(
                 'code' => 422,

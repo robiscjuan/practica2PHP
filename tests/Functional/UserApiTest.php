@@ -1,9 +1,11 @@
 <?php // tests/Functional/UserApiTest.php
 namespace MiW16\Results\Tests\Functional;
+
 use MiW16\Results\Entity\User;
 
 require_once '../../bootstrap.php';
 require_once 'BaseTestCase.php';
+
 /**
  * Class UserApiTest
  * @package MiW16\Results\Tests\Functional
@@ -30,11 +32,7 @@ class UserApiTest extends BaseTestCase
 
     public function testGet200()
     {
-        $userCreated = new User();
-        $userCreated->setUsername("user" . rand(0, 1000000));
-        $userCreated->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userCreated->setPassword("1234");
-        $userCreated->setEnabled(true);
+        $userCreated = $this->createUser();
 
         $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
@@ -77,11 +75,7 @@ class UserApiTest extends BaseTestCase
 
     public function testPost400()
     {
-        $userCreated = new User();
-        $userCreated->setUsername("user" . rand(0, 1000000));
-        $userCreated->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userCreated->setPassword("1234");
-        $userCreated->setEnabled(true);
+        $userCreated = $this->createUser();
 
         $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
@@ -101,19 +95,15 @@ class UserApiTest extends BaseTestCase
 
     public function testPut200()
     {
-        $userCreated = new User();
-        $userCreated->setUsername("user" . rand(0, 1000000));
-        $userCreated->setEmail("user" . rand(0, 1000000) . "@mail.com");
-        $userCreated->setPassword("1234");
-        $userCreated->setEnabled(true);
+        $userCreated = $this->createUser();
+
         $this->entityManager->persist($userCreated);
         $this->entityManager->flush();
         $this->entityManager->refresh($userCreated);
-        $content = [
-            'username' => 'user' . rand(0, 1000000),
-            'email' => 'user' . rand(0, 1000000) . '@mail.com'
+        $data = [
+            'username' => 'test' . mt_rand(0, 999999),
         ];
-        $response = $this->runApp('PUT', '/users/' . $userCreated->getId(), $content);
+        $response = $this->runApp('PUT', '/users/' . $userCreated->getId(), $data);
         $user = json_decode($response->getBody());
         $this->entityManager->refresh($userCreated);
         $this->assertEquals(200, $response->getStatusCode());
@@ -122,12 +112,11 @@ class UserApiTest extends BaseTestCase
 
     public function testPut404()
     {
-        $content = [
-            'username' => 'user' . rand(0, 1000000),
-            'email' => 'user' . rand(0, 1000000) . '@mail.com'
+        $data = [
+            'username' => 'test' . mt_rand(0, 999999),
         ];
-        
-        $response = $this->runApp('PUT', '/users/0', $content);
+
+        $response = $this->runApp('PUT', '/users/0', $data);
         $this->assertEquals(404, $response->getStatusCode());
     }
 
@@ -175,7 +164,8 @@ class UserApiTest extends BaseTestCase
         unset($this->userRepository);
     }
 
-    private function createUser(){
+    private function createUser()
+    {
         $userCreated = new User();
         $userCreated->setUsername('test' . mt_rand(0, 999999));
         $userCreated->setEmail(mt_rand(0, 999999) . '@test.com');
@@ -183,7 +173,9 @@ class UserApiTest extends BaseTestCase
         $userCreated->setPassword("abc123");
         return $userCreated;
     }
-    private function generateOKUser(){
+
+    private function generateOKUser()
+    {
         return [
             'username' => 'test' . mt_rand(0, 999999),
             'email' => mt_rand(0, 999999) . '@test.com',
@@ -191,7 +183,9 @@ class UserApiTest extends BaseTestCase
             'password' => 'abc123'
         ];
     }
-    private function generateIncompleteUser(){
+
+    private function generateIncompleteUser()
+    {
         return [
             'enabled' => true,
             'password' => 'abc123'
