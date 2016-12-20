@@ -216,11 +216,22 @@ $app->post(
     function ($request, $response, $args) {
         $this->logger->info('POST \'/users\'');
 
+        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
+        if ($data === null) {
+            $data = $request->getParsedBody();
+        }
+        
         $entityManager = getEntityManager();
         $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
-        $data = json_decode($request->getBody(), true);
-        if (!isset($data['username']) || !isset($data['email']) || !isset($data['password']) || !isset($data['enabled']))
-            return 'username , email, password and enabled are required';
+
+        if (empty($data['username']) || empty($data['email']) || empty($data['password']) || empty($data['enabled'])){
+            $newResponse = $response->withStatus(422);
+            $datos = array(
+                'code' => 422,
+                'message' => 'username , email, password and enabled are required'
+            );
+            return $this->renderer->render($newResponse, 'message.phtml', $datos);
+        }
 
         $username = $data['username'];
         $email = $data['email'];
@@ -254,8 +265,8 @@ $app->post(
         $entityManager->persist($user);
         $entityManager->flush();
 
-        $response->withStatus(201);
-        return $response->withJson($user);
+
+        return $response->withStatus(201)->withJson($user);
     }
 )->setName('miw_post_users');
 
@@ -302,9 +313,13 @@ $app->put(
     function ($request, $response, $args) {
         $this->logger->info('PUT \'/users\'');
 
+        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
+        if ($data === null) {
+            $data = $request->getParsedBody();
+        }
+
         $entityManager = getEntityManager();
         $userRepository = $entityManager->getRepository('MiW16\Results\Entity\User');
-        $data = json_decode($request->getBody(), true); // parse the JSON into an assoc. array
 
         /** @var User $user */
         $user = $userRepository->findOneById($args['id']);
